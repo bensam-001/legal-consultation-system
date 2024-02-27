@@ -1,0 +1,52 @@
+type Error = variant { NotFound : record { msg : text } };
+type Feedback = record {
+  rating : nat8;
+  comments : text;
+  client_id : nat64;
+  advisor_id : nat64;
+};
+type LegalAdvisor = record {
+  id : nat64;
+  name : text;
+  credentials : text;
+  rating : float32;
+};
+type LegalConsultation = record {
+  id : nat64;
+  closed_at : opt nat64;
+  created_at : nat64;
+  is_completed : bool;
+  details : text;
+  advisor_id : nat64;
+};
+type Result = variant { Ok; Err : Error };
+type Result_1 = variant { Ok : Feedback; Err : Error };
+type Result_2 = variant { Ok : LegalAdvisor; Err : Error };
+type Result_3 = variant { Ok : LegalConsultation; Err : Error };
+service : {
+  add_legal_advisor : (text, text, float32) -> (opt LegalAdvisor);
+  close_legal_consultation : (nat64, nat64) -> (Result);
+  delete_feedback : (nat64) -> (Result);
+  delete_legal_consultation : (nat64) -> (Result);
+  get_feedback : (nat64) -> (Result_1) query;
+  get_legal_advisor : (nat64) -> (Result_2) query;
+  get_legal_consultation : (nat64) -> (Result_3) query;
+  initiate_legal_consultation : (nat64, text) -> (opt LegalConsultation);
+  list_all_legal_advisors : () -> (vec LegalAdvisor) query;
+  list_all_legal_consultations : () -> (vec LegalConsultation) query;
+  list_paginated_legal_advisors : (nat64, nat64) -> (vec LegalAdvisor) query;
+  list_paginated_legal_consultations : (nat64, nat64) -> (
+      vec LegalConsultation,
+    ) query;
+  mark_consultation_as_completed : (nat64) -> (Result);
+  provide_feedback : (nat64, nat64, nat8, text) -> (Result);
+  search_legal_advisors : (text) -> (vec LegalAdvisor) query;
+  search_legal_consultations : (text) -> (vec LegalConsultation) query;
+  sort_legal_advisors_by_rating : () -> (vec LegalAdvisor) query;
+  sort_legal_consultations_by_date : () -> (vec LegalConsultation) query;
+  update_feedback : (nat64, opt nat8, opt text) -> (Result);
+  update_legal_advisor : (nat64, text, text, float32) -> (opt LegalAdvisor);
+  update_legal_consultation : (nat64, opt nat64, opt text, opt bool) -> (
+      Result,
+    );
+}
