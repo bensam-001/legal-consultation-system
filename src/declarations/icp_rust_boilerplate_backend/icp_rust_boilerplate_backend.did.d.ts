@@ -1,7 +1,8 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 
-export type Error = { 'NotFound' : { 'msg' : string } };
+export type Error = { 'Empty' : { 'msg' : string } } |
+  { 'NotFound' : { 'msg' : string } };
 export interface Feedback {
   'rating' : number,
   'comments' : string,
