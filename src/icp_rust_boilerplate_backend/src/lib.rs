@@ -30,8 +30,8 @@ impl Storable for LegalConsultation {
 }
 
 impl BoundedStorable for LegalConsultation {
-    const MAX_SIZE: u32 = 1024;  // Set an appropriate maximum size
-    const IS_FIXED_SIZE: bool = false;  // Set to true if the size is fixed, otherwise false
+    const MAX_SIZE: u32 = 1024; // Set an appropriate maximum size
+    const IS_FIXED_SIZE: bool = false; // Set to true if the size is fixed, otherwise false
 }
 
 #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
@@ -53,8 +53,8 @@ impl Storable for LegalAdvisor {
 }
 
 impl BoundedStorable for LegalAdvisor {
-    const MAX_SIZE: u32 = 1024;  // Set an appropriate maximum size
-    const IS_FIXED_SIZE: bool = false;  // Set to true if the size is fixed, otherwise false
+    const MAX_SIZE: u32 = 1024; // Set an appropriate maximum size
+    const IS_FIXED_SIZE: bool = false; // Set to true if the size is fixed, otherwise false
 }
 
 #[derive(candid::CandidType, Clone, Serialize, Deserialize, Default)]
@@ -119,6 +119,11 @@ fn get_legal_consultation(id: u64) -> Result<LegalConsultation, Error> {
 
 #[ic_cdk::update]
 fn initiate_legal_consultation(advisor_id: u64, details: String) -> Option<LegalConsultation> {
+    //Ensure inputs are not empty
+    if advisor_id == 0 || details.is_empty() {
+        return None; //Return None to indicate validation failure
+    }
+
     let id = ID_COUNTER
         .with(|counter| {
             let current_value = *counter.borrow().get();
@@ -141,6 +146,11 @@ fn initiate_legal_consultation(advisor_id: u64, details: String) -> Option<Legal
 
 #[ic_cdk::update]
 fn update_legal_advisor(id: u64, name: String, credentials: String, rating: f32) -> Option<LegalAdvisor> {
+    //Ensure input fields are not empty
+    if id == 0 || name.is_empty() || credentials.is_empty() || rating.is_nan() {
+        return None; // Indicates validation failure
+    }
+
     let advisor = LegalAdvisor {
         id,
         name,
@@ -178,6 +188,11 @@ fn delete_legal_consultation(id: u64) -> Result<(), Error> {
 
 #[ic_cdk::update]
 fn add_legal_advisor(name: String, credentials: String, rating: f32) -> Option<LegalAdvisor> {
+    //Ensure input fields are not empty
+    if name.is_empty() || credentials.is_empty() || rating.is_nan() {
+        return None // Indicates validation failure
+    }
+    
     let id = ID_COUNTER
         .with(|counter| {
             let current_value = *counter.borrow().get();
@@ -320,7 +335,8 @@ fn search_legal_advisors(criteria: String) -> Vec<LegalAdvisor> {
 fn sort_legal_consultations_by_date() -> Vec<LegalConsultation> {
     LEGAL_CONSULTATIONS.with(|service| {
         let map_ref = service.borrow();
-        let mut consultations: Vec<LegalConsultation> = map_ref.iter().map(|(_, v)| v.clone()).collect();
+        let mut consultations: Vec<LegalConsultation> =
+            map_ref.iter().map(|(_, v)| v.clone()).collect();
         consultations.sort_by_key(|consultation| consultation.created_at);
         consultations
     })
@@ -340,9 +356,15 @@ fn sort_legal_advisors_by_rating() -> Vec<LegalAdvisor> {
 fn list_paginated_legal_consultations(page: usize, page_size: usize) -> Vec<LegalConsultation> {
     LEGAL_CONSULTATIONS.with(|service| {
         let map_ref = service.borrow();
-        let consultations: Vec<LegalConsultation> = map_ref.iter().map(|(_, v)| v.clone()).collect();
+        let consultations: Vec<LegalConsultation> =
+            map_ref.iter().map(|(_, v)| v.clone()).collect();
         let start_index = page * page_size;
-        consultations.iter().skip(start_index).take(page_size).cloned().collect()
+        consultations
+            .iter()
+            .skip(start_index)
+            .take(page_size)
+            .cloned()
+            .collect()
     })
 }
 
@@ -352,12 +374,22 @@ fn list_paginated_legal_advisors(page: usize, page_size: usize) -> Vec<LegalAdvi
         let map_ref = service.borrow();
         let advisors: Vec<LegalAdvisor> = map_ref.iter().map(|(_, v)| v.clone()).collect();
         let start_index = page * page_size;
-        advisors.iter().skip(start_index).take(page_size).cloned().collect()
+        advisors
+            .iter()
+            .skip(start_index)
+            .take(page_size)
+            .cloned()
+            .collect()
     })
 }
 
 #[ic_cdk::update]
 fn provide_feedback(client_id: u64, advisor_id: u64, rating: u8, comments: String) -> Result<(), Error> {
+    //Ensure no empty fields
+    if client_id == 0 || advisor_id == 0 || comments.is_empty() {
+        return  Err(Error::Empty { msg: "Please fill in all fields".to_string() });
+    }
+    
     ID_COUNTER
         .with(|counter| {
             let current_value = *counter.borrow().get();
@@ -429,6 +461,7 @@ fn delete_feedback(id: u64) -> Result<(), Error> {
 #[derive(candid::CandidType, Deserialize, Serialize)]
 enum Error {
     NotFound { msg: String },
+    Empty { msg: String}
 }
 
 ic_cdk::export_candid!();

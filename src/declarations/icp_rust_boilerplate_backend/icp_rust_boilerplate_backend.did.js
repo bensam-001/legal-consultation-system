@@ -5,7 +5,10 @@ export const idlFactory = ({ IDL }) => {
     'credentials' : IDL.Text,
     'rating' : IDL.Float32,
   });
-  const Error = IDL.Variant({ 'NotFound' : IDL.Record({ 'msg' : IDL.Text }) });
+  const Error = IDL.Variant({
+    'Empty' : IDL.Record({ 'msg' : IDL.Text }),
+    'NotFound' : IDL.Record({ 'msg' : IDL.Text }),
+  });
   const Result = IDL.Variant({ 'Ok' : IDL.Null, 'Err' : Error });
   const Feedback = IDL.Record({
     'rating' : IDL.Nat8,
